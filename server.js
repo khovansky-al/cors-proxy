@@ -25,7 +25,7 @@ app.all('*', function (req, res, next) {
             return;
         }
 
-        request({
+        var proxiedRequest = request({
             url: targetURL + req.url,
             method: req.method,
             json: Object.keys(req.body).length > 0 ? req.body : undefined,
@@ -37,12 +37,16 @@ app.all('*', function (req, res, next) {
                 'X-TokenId': req.header('X-TokenId') || '',
                 'X-Audit-Message': req.header('X-Audit-Message') || '',
             },
-            function (error, response, body) {
-                if (error) {
-                    console.error('error', response ? response.statusCode : 'unknown status', error)
-                }
-            }
-        }).pipe(res);
+        }, function (_, response) {
+            console.log(`[${req.method}] ${targetURL}${req.url} -> ${response.statusCode}`)
+        })
+        
+        proxiedRequest.on('error', function(e) {
+            console.log(`[${req.method}] ${targetURL} -> Failed to request`)
+            res.send(500, { error: `Cannot proxy request: ${e.message}` });
+        });
+
+        proxiedRequest.pipe(res);
     }
 });
 
