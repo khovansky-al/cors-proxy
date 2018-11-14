@@ -38,6 +38,10 @@ app.all('*', function (req, res, next) {
                 'X-Audit-Message': req.header('X-Audit-Message') || '',
             },
         }, function (_, response) {
+            if (!response) {
+                console.log(`[${req.method}] ${targetURL}${req.url} -> NO RESPONSE`);
+                return;
+            }
             console.log(`[${req.method}] ${targetURL}${req.url} -> ${response.statusCode}`)
         })
         
